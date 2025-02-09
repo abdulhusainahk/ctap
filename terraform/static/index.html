@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Registration - Static UI</title>
+  <script>
+    async function registerUser() {
+      // Collect the email and password from input fields
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      // Prepare URL-encoded form data
+      const formData = new URLSearchParams();
+      formData.append('email', email);
+      formData.append('password', password);
+      
+      try {
+        // Send a POST request to the /register endpoint with form data
+        const response = await fetch("http://172.174.59.41:8080/register", {
+          method: "POST",
+          body: formData
+        });
+        
+        // Check if the response status is 200 (success) or not
+        if(response.status === 200) {
+          document.getElementById("apiResponse").innerHTML = "Registered";
+        } else {
+          document.getElementById("apiResponse").innerHTML = "Failed";
+        }
+      } catch (error) {
+        document.getElementById("apiResponse").innerHTML = "Error calling API.";
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>Register</h1>
+  <label for="email">Email:</label>
+  <input type="text" id="email" name="email"><br><br>
+  <label for="password">Password:</label>
+  <input type="password" id="password" name="password"><br><br>
+  <button onclick="registerUser()">Register</button>
+  <div id="apiResponse"></div>
+</body>
+</html>

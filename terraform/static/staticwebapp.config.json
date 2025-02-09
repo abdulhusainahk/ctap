@@ -1,0 +1,13 @@
+{
+    "navigationFallback": {
+      "rewrite": "/index.html"
+    },
+    "routes": [
+      {
+        "route": "/error",
+        "serve": "/error.html",
+        "statusCode": 404
+      }
+    ]
+  }
+  
