@@ -40,20 +40,20 @@ resource "azurerm_subnet" "db" {
   }
 }
 }
-resource "azurerm_subnet" "vnet_integration" {
-  name                 = "ctap-integration-subnet"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.4.0/24"]
+# resource "azurerm_subnet" "vnet_integration" {
+#   name                 = "ctap-integration-subnet"
+#   resource_group_name  = azurerm_resource_group.rg.name
+#   virtual_network_name = azurerm_virtual_network.vnet.name
+#   address_prefixes     = ["10.0.4.0/24"]
 
-  delegation {
-    name = "app_service_delegation"
-    service_delegation {
-      name    = "Microsoft.Web/serverFarms"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
-    }
-  }
-}
+#   delegation {
+#     name = "app_service_delegation"
+#     service_delegation {
+#       name    = "Microsoft.Web/serverFarms"
+#       actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+#     }
+#   }
+# }
 
 
 resource "azurerm_app_service_plan" "ui_plan" {
@@ -84,11 +84,11 @@ resource "azurerm_app_service" "ui_app" {
   }
   depends_on = [ azurerm_linux_virtual_machine.vm_api ]
 }
-resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration" {
-  app_service_id = azurerm_app_service.ui_app.id
-  subnet_id      = azurerm_subnet.vnet_integration.id
-  depends_on = [ azurerm_subnet.vnet_integration ,azurerm_app_service.ui_app]
-}
+# resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration" {
+#   app_service_id = azurerm_app_service.ui_app.id
+#   subnet_id      = azurerm_subnet.vnet_integration.id
+#   depends_on = [ azurerm_subnet.vnet_integration ,azurerm_app_service.ui_app]
+# }
 
 
 data "archive_file" "ui_zip" {
@@ -103,7 +103,7 @@ resource "null_resource" "deploy_ui" {
     ui_zip_hash = data.archive_file.ui_zip.output_base64sha256
   }
   provisioner "local-exec" {
-    command = "az webapp deploy --resource-group rg-multi-tier-demo --name ctap-ui-webapp-renewed-boar --src-path ./ui.zip"
+    command = "az webapp deploy --resource-group ${var.resource_group_name} --name ${azurerm_app_service.ui_app.name} --src-path ./ui.zip"
   }
   depends_on = [ azurerm_app_service.ui_app ]
 }
@@ -213,9 +213,12 @@ provisioner "file" {
 
 provisioner "remote-exec" {
   inline = [
-    "openssl req -nodes -new -x509 -keyout server.key -out server.cert -days 365",
+    "openssl req -nodes -new -x509 -keyout server.key -out server.cert -days 365 -subj '/C=US/ST=California/L=SanFrancisco/O=MyOrganization/OU=IT/CN=your.domain.com'",
     "chmod +x /home/azureuser/app.js",
+    "curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -",
+    "sudo apt-get install -y nodejs",
     "npm install express",
+    "npm install cors",
     "npm install https",
     "npm install fs",
     "npm install express-session",

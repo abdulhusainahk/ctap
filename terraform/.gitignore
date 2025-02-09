@@ -6,4 +6,5 @@
 *.tfstate.*
 
 # Ignore Terraform lock file
-terraform.lock.hcl
+.terraform.lock.hcl
+terraform.tfstate

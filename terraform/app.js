@@ -1,6 +1,7 @@
 const https = require("https");
 const fs = require("fs");
 const express = require("express");
+const cors = require('cors');
 const bodyParser = require("body-parser");
 const session = require("express-session");
 const mysql = require("mysql2/promise");
@@ -15,6 +16,9 @@ const httpsOptions = {
 };
 
 // Middleware
+app.use(cors({
+  origin: '*'
+}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(session({
   secret: "mySuperSecretKey", // In production, store this securely
@@ -38,7 +42,7 @@ const pool = mysql.createPool({
 
 // Serve the login page or registration page
 app.get("/", async (req, res) => {
-  res.redirect("https://ctap-ui-webapp-renewed-boar.azurewebsites.net/");
+  res.redirect("https://ctap-ui-webapp-main-fly.azurewebsites.net/");
 });
 
 // Updated registration endpoint to return a status code
@@ -64,22 +68,14 @@ app.post("/login", async (req, res) => {
   try {
     const [rows] = await pool.query("SELECT * FROM users WHERE email = ? AND password = ?", [email, password]);
     if (rows.length > 0) {
-      req.session.loggedIn = true;
-      req.session.email = email;
-      res.redirect("/");
+      res.sendStatus(200);
     } else {
-      res.send("Invalid credentials. <a href='/'>Try again</a>");
+      res.status(500).send(`login failed: ${err.message}`);
     }
   } catch (err) {
     console.error("Login error:", err);
-    res.send("Error during login. <a href='/'>Try again</a>");
+    res.status(500).send(`login failed: ${err.message}`);
   }
-});
-
-// Logout endpoint
-app.get("/logout", (req, res) => {
-  req.session.destroy();
-  res.redirect("/");
 });
 
 // Start the HTTPS server so the app is available at https://<public-ip>:8080/
