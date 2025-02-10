@@ -40,21 +40,6 @@ resource "azurerm_subnet" "db" {
   }
 }
 }
-# resource "azurerm_subnet" "vnet_integration" {
-#   name                 = "ctap-integration-subnet"
-#   resource_group_name  = azurerm_resource_group.rg.name
-#   virtual_network_name = azurerm_virtual_network.vnet.name
-#   address_prefixes     = ["10.0.4.0/24"]
-
-#   delegation {
-#     name = "app_service_delegation"
-#     service_delegation {
-#       name    = "Microsoft.Web/serverFarms"
-#       actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
-#     }
-#   }
-# }
-
 
 resource "azurerm_app_service_plan" "ui_plan" {
   name                = "ctap-ui-appserviceplan-${random_pet.suffix.id}"
@@ -84,21 +69,15 @@ resource "azurerm_app_service" "ui_app" {
   }
   depends_on = [ azurerm_linux_virtual_machine.vm_api ]
 }
-# resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration" {
-#   app_service_id = azurerm_app_service.ui_app.id
-#   subnet_id      = azurerm_subnet.vnet_integration.id
-#   depends_on = [ azurerm_subnet.vnet_integration ,azurerm_app_service.ui_app]
-# }
 
 
 data "archive_file" "ui_zip" {
   type        = "zip"
-  source_dir  = "static"                  # Directory containing your UI files (e.g., index.html, error.html, assets/)
-  output_path = "${path.module}/ui.zip"  # The path where the zip file will be created
+  source_dir  = "static"                 
+  output_path = "${path.module}/ui.zip" 
 }
 
 resource "null_resource" "deploy_ui" {
-  # The trigger ensures that if the UI files change (i.e. the zip hash changes), the deployment is re-run.
   triggers = {
     ui_zip_hash = data.archive_file.ui_zip.output_base64sha256
   }
